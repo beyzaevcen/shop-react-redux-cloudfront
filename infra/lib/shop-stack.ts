@@ -1,8 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import * as path from 'path';
 
 export class ShopStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -44,6 +47,31 @@ export class ShopStack extends cdk.Stack {
       comment: 'Shop React App distribution',
     });
 
+    const getProductsListLambda = new lambda.Function(this, 'GetProductsListLambda', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset(
+        path.join(__dirname, '../lambda/product-service/getProductsList')
+      ),
+      functionName: 'getProductsList',
+      description: 'Returns the full list of products for the product list page.',
+    });
+
+    const productServiceApi = new apigateway.RestApi(this, 'ProductServiceApi', {
+      restApiName: 'Product Service',
+      description: 'Product Service API for frontend product queries.',
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: ['GET', 'OPTIONS'],
+      },
+    });
+
+    const productsResource = productServiceApi.root.addResource('products');
+    productsResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getProductsListLambda)
+    );
+
     // Outputs — consumed by deploy scripts
     new cdk.CfnOutput(this, 'BucketName', {
       value: bucket.bucketName,
@@ -61,6 +89,12 @@ export class ShopStack extends cdk.Stack {
       value: distribution.distributionDomainName,
       description: 'CloudFront distribution domain name',
       exportName: 'ShopDistributionDomain',
+    });
+
+    new cdk.CfnOutput(this, 'ProductServiceApiUrl', {
+      value: productServiceApi.urlForPath('/products'),
+      description: 'Product Service GET /products endpoint',
+      exportName: 'ProductServiceApiUrl',
     });
   }
 }
