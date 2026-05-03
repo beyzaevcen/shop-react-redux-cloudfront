@@ -1,9 +1,9 @@
 import { OrderStatus } from "~/constants/order";
 import { CartItem } from "~/models/CartItem";
 import { Order } from "~/models/Order";
-import { AvailableProduct, Product } from "~/models/Product";
+import { AvailableProduct, BaseProduct } from "~/models/Product";
 
-export const products: Product[] = [
+export const products: BaseProduct[] = [
   {
     description: "Short Product Description1",
     id: "7567ec4b-b10c-48c5-9345-fc73c48a80aa",
@@ -48,21 +48,11 @@ export const availableProducts: AvailableProduct[] = products.map(
 
 export const cart: CartItem[] = [
   {
-    product: {
-      description: "Short Product Description1",
-      id: "7567ec4b-b10c-48c5-9345-fc73c48a80aa",
-      price: 24,
-      title: "ProductOne",
-    },
+    product: availableProducts[0],
     count: 2,
   },
   {
-    product: {
-      description: "Short Product Description7",
-      id: "7567ec4b-b10c-45c5-9345-fc73c48a80a1",
-      price: 15,
-      title: "ProductName",
-    },
+    product: availableProducts[5],
     count: 5,
   },
 ];

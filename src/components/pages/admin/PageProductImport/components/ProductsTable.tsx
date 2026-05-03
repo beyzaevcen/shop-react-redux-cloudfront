@@ -8,16 +8,10 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import { formatAsPrice } from "~/utils/utils";
-import {
-  useAvailableProducts,
-  useDeleteAvailableProduct,
-  useInvalidateAvailableProducts,
-} from "~/queries/products";
+import { useAvailableProducts } from "~/queries/products";
 
 export default function ProductsTable() {
   const { data = [] } = useAvailableProducts();
-  const { mutate: deleteAvailableProduct } = useDeleteAvailableProduct();
-  const invalidateAvailableProducts = useInvalidateAvailableProducts();
 
   return (
     <TableContainer component={Paper}>
@@ -49,19 +43,9 @@ export default function ProductsTable() {
                   component={Link}
                   to={`/admin/product-form/${product.id}`}
                 >
-                  Manage
+                  View
                 </Button>
-                <Button
-                  size="small"
-                  color="secondary"
-                  onClick={() => {
-                    if (product.id) {
-                      deleteAvailableProduct(product.id, {
-                        onSuccess: invalidateAvailableProducts,
-                      });
-                    }
-                  }}
-                >
+                <Button size="small" color="secondary" disabled>
                   Delete
                 </Button>
               </TableCell>

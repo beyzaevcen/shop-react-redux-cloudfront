@@ -1,19 +1,16 @@
 import axios, { AxiosError } from "axios";
 import API_PATHS from "~/constants/apiPaths";
-import { AvailableProduct } from "~/models/Product";
+import { Product } from "~/models/Product";
 import { useQuery, useQueryClient, useMutation } from "react-query";
 import React from "react";
 
+const PRODUCTS_ENDPOINT = `${API_PATHS.bff}/products`;
+
 export function useAvailableProducts() {
-  return useQuery<AvailableProduct[], AxiosError>(
-    "available-products",
-    async () => {
-      const res = await axios.get<AvailableProduct[]>(
-        `${API_PATHS.bff}/product/available`
-      );
-      return res.data;
-    }
-  );
+  return useQuery<Product[], AxiosError>("available-products", async () => {
+    const res = await axios.get<Product[]>(PRODUCTS_ENDPOINT);
+    return res.data;
+  });
 }
 
 export function useInvalidateAvailableProducts() {
@@ -25,12 +22,10 @@ export function useInvalidateAvailableProducts() {
 }
 
 export function useAvailableProduct(id?: string) {
-  return useQuery<AvailableProduct, AxiosError>(
+  return useQuery<Product, AxiosError>(
     ["product", { id }],
     async () => {
-      const res = await axios.get<AvailableProduct>(
-        `${API_PATHS.bff}/product/${id}`
-      );
+      const res = await axios.get<Product>(`${PRODUCTS_ENDPOINT}/${id}`);
       return res.data;
     },
     { enabled: !!id }
@@ -47,21 +42,17 @@ export function useRemoveProductCache() {
 }
 
 export function useUpsertAvailableProduct() {
-  return useMutation((values: AvailableProduct) =>
-    axios.put<AvailableProduct>(`${API_PATHS.bff}/product`, values, {
-      headers: {
-        Authorization: `Basic ${localStorage.getItem("authorization_token")}`,
-      },
-    })
-  );
+  return useMutation((values: Product) => {
+    if (values.id) {
+      throw new Error("Product update endpoint is not deployed.");
+    }
+
+    return axios.post<Product>(`${API_PATHS.product}/products`, values);
+  });
 }
 
 export function useDeleteAvailableProduct() {
-  return useMutation((id: string) =>
-    axios.delete(`${API_PATHS.bff}/product/${id}`, {
-      headers: {
-        Authorization: `Basic ${localStorage.getItem("authorization_token")}`,
-      },
-    })
-  );
+  return useMutation(async () => {
+    throw new Error("Product delete endpoint is not deployed.");
+  });
 }

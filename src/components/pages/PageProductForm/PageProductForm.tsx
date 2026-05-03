@@ -18,19 +18,14 @@ const initialValues: AvailableProduct = AvailableProductSchema.cast({});
 export default function PageProductForm() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const isEditMode = !!id;
   const invalidateAvailableProducts = useInvalidateAvailableProducts();
   const removeProductCache = useRemoveProductCache();
   const { data, isLoading } = useAvailableProduct(id);
   const { mutateAsync: upsertAvailableProduct } = useUpsertAvailableProduct();
   const onSubmit = (values: AvailableProduct) => {
     const formattedValues = AvailableProductSchema.cast(values);
-    const productToSave = id
-      ? {
-          ...formattedValues,
-          id,
-        }
-      : formattedValues;
-    return upsertAvailableProduct(productToSave, {
+    return upsertAvailableProduct(formattedValues, {
       onSuccess: () => {
         invalidateAvailableProducts();
         removeProductCache(id);
@@ -42,8 +37,13 @@ export default function PageProductForm() {
   return (
     <PaperLayout>
       <Typography component="h1" variant="h4" align="center" mb={2}>
-        {id ? "Edit product" : "Create new product"}
+        {isEditMode ? "View product" : "Create new product"}
       </Typography>
+      {isEditMode && (
+        <Typography color="text.secondary" align="center" mb={2}>
+          This deployment supports reading products and creating new ones. Update is not available yet.
+        </Typography>
+      )}
       {isLoading ? (
         <>Loading...</>
       ) : (
@@ -107,9 +107,9 @@ export default function PageProductForm() {
                     type="submit"
                     variant="contained"
                     color="primary"
-                    disabled={!dirty || isSubmitting}
+                    disabled={isEditMode || !dirty || isSubmitting}
                   >
-                    Save Product
+                    {isEditMode ? "Update Not Available" : "Create Product"}
                   </Button>
                 </Grid>
               </Grid>
