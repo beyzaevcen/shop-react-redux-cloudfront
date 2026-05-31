@@ -1,17 +1,40 @@
-import axios, { AxiosError } from "axios";
 import React from "react";
 import { useQuery, useQueryClient, useMutation } from "react-query";
-import API_PATHS from "~/constants/apiPaths";
 import { CartItem } from "~/models/CartItem";
+import { Product } from "~/models/Product";
+import { Address } from "~/models/Order";
+import { getCart, updateCart, checkout } from "~/api/cartApi";
+
+function getCredentials(): [string, string] {
+  const token = localStorage.getItem("authorization_token") ?? "";
+  try {
+    const decoded = globalThis.atob(token);
+    const idx = decoded.indexOf(":");
+    return [decoded.slice(0, idx), decoded.slice(idx + 1)];
+  } catch {
+    return ["", ""];
+  }
+}
 
 export function useCart() {
-  return useQuery<CartItem[], AxiosError>("cart", async () => {
-    const res = await axios.get<CartItem[]>(`${API_PATHS.cart}/profile/cart`, {
-      headers: {
-        Authorization: `Basic ${localStorage.getItem("authorization_token")}`,
-      },
-    });
-    return res.data;
+  const queryClient = useQueryClient();
+  return useQuery<CartItem[], Error>("cart", async () => {
+    const [username, password] = getCredentials();
+    const apiItems = await getCart(username, password);
+    if (!Array.isArray(apiItems)) return [];
+
+    const products =
+      queryClient.getQueryData<Product[]>("products-list") ?? [];
+
+    return apiItems.map((item) => ({
+      product: (products.find((p) => p.id === item.productId) ?? {
+        id: item.productId,
+        title: item.productId,
+        description: "",
+        price: 0,
+      }) as Product,
+      count: item.count,
+    }));
   });
 }
 
@@ -29,11 +52,15 @@ export function useInvalidateCart() {
 }
 
 export function useUpsertCart() {
-  return useMutation((values: CartItem) =>
-    axios.put<CartItem[]>(`${API_PATHS.cart}/profile/cart`, values, {
-      headers: {
-        Authorization: `Basic ${localStorage.getItem("authorization_token")}`,
-      },
-    })
-  );
+  return useMutation((values: CartItem) => {
+    const [username, password] = getCredentials();
+    return updateCart(username, password, values.product as Product, values.count);
+  });
+}
+
+export function useCheckout() {
+  return useMutation((address: Address) => {
+    const [username, password] = getCredentials();
+    return checkout(username, password, address);
+  });
 }

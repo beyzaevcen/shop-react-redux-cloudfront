@@ -7,11 +7,10 @@ import Typography from "@mui/material/Typography";
 import ReviewCart from "~/components/pages/PageCart/components/ReviewCart";
 import ReviewOrder from "~/components/pages/PageCart/components/ReviewOrder";
 import PaperLayout from "~/components/PaperLayout/PaperLayout";
-import { Address, AddressSchema, Order } from "~/models/Order";
+import { Address, AddressSchema } from "~/models/Order";
 import Box from "@mui/material/Box";
-import { useCart, useInvalidateCart } from "~/queries/cart";
+import { useCart, useInvalidateCart, useCheckout } from "~/queries/cart";
 import AddressForm from "~/components/pages/PageCart/components/AddressForm";
-import { useSubmitOrder } from "~/queries/orders";
 
 enum CartStep {
   ReviewCart,
@@ -44,7 +43,7 @@ const steps = ["Review your cart", "Shipping address", "Review your order"];
 
 export default function PageCart() {
   const { data = [] } = useCart();
-  const { mutate: submitOrder } = useSubmitOrder();
+  const { mutate: submitOrder } = useCheckout();
   const invalidateCart = useInvalidateCart();
   const [activeStep, setActiveStep] = React.useState<CartStep>(
     CartStep.ReviewCart
@@ -58,15 +57,8 @@ export default function PageCart() {
       setActiveStep((step) => step + 1);
       return;
     }
-    const values = {
-      items: data.map((i) => ({
-        productId: i.product.id,
-        count: i.count,
-      })),
-      address,
-    };
 
-    submitOrder(values as Omit<Order, "id">, {
+    submitOrder(address, {
       onSuccess: () => {
         setActiveStep(activeStep + 1);
         invalidateCart();
