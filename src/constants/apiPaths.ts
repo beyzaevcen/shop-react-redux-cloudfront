@@ -7,7 +7,7 @@ const API_PATHS = {
     import.meta.env.VITE_IMPORT_API_URL ||
     "https://qowmrqhjp1.execute-api.us-east-1.amazonaws.com/prod",
   bff: "https://.execute-api.eu-west-1.amazonaws.com/dev",
-  cart: "https://.execute-api.eu-west-1.amazonaws.com/dev",
+  cart: "https://cc2zmoqg7l.execute-api.us-east-1.amazonaws.com/prod/api",
 };
 
 export default API_PATHS;
